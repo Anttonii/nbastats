@@ -13,10 +13,16 @@ kaggle datasets download -d sumitrodatta/nba-aba-baa-stats
 or if you are not familiar with `kaggle` from the command line, you can find help with the installation [here](https://www.kaggle.com/docs/api#interacting-with-datasets). Alternatively download the data manually and place it the root of this folder still zipped. After you've done so, run
 
 ```
-python preprocess.py
+python preprocess.py 1
 ```
 
-to build your own `players.json` file into the output folder. Alternatively use the one readily provided. This package uses `pandas` which can be installed simply by:
+to build your own `players.json` and `alltime.json` files into the output folder. Alternatively use the ones already provided. If you've already unpacked the dataset, run instead:
+
+```
+python preprocess.py 0
+```
+
+This repository uses `pandas` for data processing, which can be installed simply by:
 
 ```
 pip install -r requirements.txt
