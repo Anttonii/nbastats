@@ -130,7 +130,9 @@ def main():
         # Drop the seasons that don't have shooting percentage data and the latest season
         (lambda x: x.drop(x[x["season"] <= 2012].index, inplace=True)),
         (lambda x: x.drop(x[x["season"] > 2024].index, inplace=True)),
-        (lambda x: x.drop("lg", axis=1)),
+        (lambda x: x.drop("lg", axis=1, inplace=True)),
+        (lambda x: x.drop("experience", axis=1, inplace=True)),
+        (lambda x: x.drop("birth_year", axis=1, inplace=True)),
     ]
 
     totals_path = os.path.join(output_dir, player_totals)
