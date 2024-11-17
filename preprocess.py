@@ -11,7 +11,10 @@ player_totals = "Player Totals.csv"
 player_shooting = "Player Shooting.csv"
 
 players_json = "players.json"
-all_time_json = "alltime.json"
+alltime_json = "alltime.json"
+seasonal_averages_json = "averages_season.json"
+alltime_averages_json = "averages_alltime.json"
+position_averages_json = "averages_position.json"
 
 
 def unpack():
@@ -50,7 +53,7 @@ def unpack():
 def get_all_time(df: pd.DataFrame) -> pd.DataFrame:
     """
     Builds the all time data frame on player to player basis by calculating totals and averages aggregated over the entire career
-    here career being defined as the range of years accepeted for processing (2013-2023)
+    here career being defined as the range of years accepted for processing (2013-2023)
     """
     grouped = df.groupby(by=["player"], as_index=False)
 
@@ -109,6 +112,31 @@ def get_all_time(df: pd.DataFrame) -> pd.DataFrame:
     return aggregated
 
 
+def get_league_averages(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Gets league averages on season to season basis, all time and for different positions.
+    """
+    # remove unnecessary values
+    df.drop(["player_id", "seas_id", "player", "tm"], axis=1, inplace=True)
+    positional_data = df.groupby(by=["season", "pos"]).mean().reset_index()
+
+    df.drop("pos", axis=1, inplace=True)
+    seasonal_data = df.groupby(by=["season"]).mean().reset_index()
+
+    df.drop("season", axis=1, inplace=True)
+    alltime_data = df.mean()
+
+    return (seasonal_data, alltime_data, positional_data)
+
+
+def generate_json(df, path, orient="records"):
+    """
+    Utility function for generating json outputs.
+    """
+    df.to_json(path, orient=orient)
+    print(f"Output generated succesfully to: {path}")
+
+
 def main():
     """
     Preprocess the dataset to be used.
@@ -130,9 +158,7 @@ def main():
         # Drop the seasons that don't have shooting percentage data and the latest season
         (lambda x: x.drop(x[x["season"] <= 2012].index, inplace=True)),
         (lambda x: x.drop(x[x["season"] > 2024].index, inplace=True)),
-        (lambda x: x.drop("lg", axis=1, inplace=True)),
-        (lambda x: x.drop("experience", axis=1, inplace=True)),
-        (lambda x: x.drop("birth_year", axis=1, inplace=True)),
+        (lambda x: x.drop(["lg", "experience", "birth_year"], axis=1, inplace=True)),
     ]
 
     totals_path = os.path.join(output_dir, player_totals)
@@ -146,16 +172,20 @@ def main():
         op(shooting)
 
     merged_df = totals.merge(shooting, how="outer")
-    all_time_df = get_all_time(merged_df)
+    alltime_df = get_all_time(merged_df)
+    (s_avg, at_avg, pos_avg) = get_league_averages(merged_df)
 
     players_json_path = os.path.join(output_dir, players_json)
-    all_time_json_path = os.path.join(output_dir, all_time_json)
+    alltime_json_path = os.path.join(output_dir, alltime_json)
+    seasonal_averages_json_path = os.path.join(output_dir, seasonal_averages_json)
+    alltime_averages_json_path = os.path.join(output_dir, alltime_averages_json)
+    position_averages_json_path = os.path.join(output_dir, position_averages_json)
 
-    merged_df.to_json(players_json_path, orient="records")
-    print(f"Output generated succesfully to: {players_json_path}")
-
-    all_time_df.to_json(all_time_json_path, orient="records")
-    print(f"Output generated succesfully to: {all_time_json_path}")
+    generate_json(merged_df, players_json_path)
+    generate_json(alltime_df, alltime_json_path)
+    generate_json(s_avg, seasonal_averages_json_path)
+    generate_json(at_avg, alltime_averages_json_path, "index")
+    generate_json(pos_avg, position_averages_json_path)
 
 
 if __name__ == "__main__":
