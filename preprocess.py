@@ -55,7 +55,7 @@ def get_all_time(df: pd.DataFrame) -> pd.DataFrame:
     Builds the all time data frame on player to player basis by calculating totals and averages aggregated over the entire career
     here career being defined as the range of years accepted for processing (2013-2023)
     """
-    grouped = df.groupby(by=["player"], as_index=False)
+    grouped = df.copy().groupby(by=["player"], as_index=False)
 
     # The stats to calculate totals of
     totals = [
@@ -116,15 +116,17 @@ def get_league_averages(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Gets league averages on season to season basis, all time and for different positions.
     """
+    copy = df.copy()
+
     # remove unnecessary values
-    df.drop(["player_id", "seas_id", "player", "tm"], axis=1, inplace=True)
-    positional_data = df.groupby(by=["season", "pos"]).mean().reset_index()
+    copy.drop(["player_id", "seas_id", "player", "tm"], axis=1, inplace=True)
+    positional_data = copy.groupby(by=["season", "pos"]).mean().reset_index()
 
-    df.drop("pos", axis=1, inplace=True)
-    seasonal_data = df.groupby(by=["season"]).mean().reset_index()
+    copy.drop("pos", axis=1, inplace=True)
+    seasonal_data = copy.groupby(by=["season"]).mean().reset_index()
 
-    df.drop("season", axis=1, inplace=True)
-    alltime_data = df.mean()
+    copy.drop("season", axis=1, inplace=True)
+    alltime_data = copy.mean()
 
     return (seasonal_data, alltime_data, positional_data)
 
@@ -184,7 +186,7 @@ def main():
     generate_json(merged_df, players_json_path)
     generate_json(alltime_df, alltime_json_path)
     generate_json(s_avg, seasonal_averages_json_path)
-    generate_json(at_avg, alltime_averages_json_path, "index")
+    generate_json(at_avg, alltime_averages_json_path, orient="index")
     generate_json(pos_avg, position_averages_json_path)
 
 
