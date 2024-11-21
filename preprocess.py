@@ -162,6 +162,7 @@ def main():
         (lambda x: x.drop(x[x["season"] <= 2012].index, inplace=True)),
         (lambda x: x.drop(x[x["season"] > 2024].index, inplace=True)),
         (lambda x: x.drop(["lg", "experience", "birth_year"], axis=1, inplace=True)),
+        (lambda x: x.drop(x.loc[x["tm"] == "TOT"].index, inplace=True)),
     ]
 
     totals_path = os.path.join(output_dir, player_totals)
