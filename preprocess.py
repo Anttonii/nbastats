@@ -176,9 +176,14 @@ def main():
         op(shooting)
 
     merged_df = totals.merge(shooting, how="outer")
-    merged_df["tm"].replace("CHO", "CHA", inplace=True)
+    merged_df = merged_df.replace(to_replace="CHO", value="CHA")
 
-    player_map = totals[["player_id", "player"]].drop_duplicates()
+    player_map = (
+        merged_df.sort_values(by="season")
+        .groupby("player")
+        .last()
+        .reset_index()[["player_id", "player", "tm"]]
+    )
     alltime_df = get_all_time(merged_df)
     (s_avg, at_avg, pos_avg) = get_league_averages(merged_df)
 
