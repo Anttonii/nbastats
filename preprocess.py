@@ -132,6 +132,20 @@ def get_league_averages(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return (seasonal_data, alltime_data, positional_data)
 
 
+def clear_duplicates(duplicates, player_map):
+    # Take the maximum ID.
+    max_id = player_map["player_id"].max()
+
+    # For each unique duplicate, change the player id to a new
+    # unique ID by setting it to max_id + 1
+    for i in range(0, len(duplicates), 2):
+        max_id += 1
+        indices = player_map["player"] == duplicates.iloc[i]["player"]
+        player_map.loc[indices, "player_id"] = max_id
+
+    return player_map
+
+
 def generate_json(df, path, orient="records"):
     """
     Utility function for generating json outputs.
@@ -184,6 +198,27 @@ def main():
         .last()
         .reset_index()[["player_id", "player", "tm"]]
     )
+
+    duplicates = (
+        player_map[
+            player_map["player_id"].isin(
+                player_map["player_id"][player_map["player_id"].duplicated()]
+            )
+        ]
+        .sort_values("player_id")
+        .reset_index()
+    )
+
+    if len(duplicates.index) > 0:
+        print("Found duplicates, changing IDs to unique ones.")
+        player_map = clear_duplicates(duplicates, player_map)
+
+    # Copy over changes to merged_df.
+    for _, row in player_map.iterrows():
+        merged_df.loc[merged_df["player"] == row["player"], "player_id"] = row[
+            "player_id"
+        ]
+
     alltime_df = get_all_time(merged_df)
     (s_avg, at_avg, pos_avg) = get_league_averages(merged_df)
 
