@@ -11,6 +11,7 @@ player_totals = "Player Totals.csv"
 player_shooting = "Player Shooting.csv"
 
 players_json = "players.json"
+players_mapping_json = "players_map.json"
 alltime_json = "alltime.json"
 seasonal_averages_json = "averages_season.json"
 alltime_averages_json = "averages_alltime.json"
@@ -174,16 +175,19 @@ def main():
         op(shooting)
 
     merged_df = totals.merge(shooting, how="outer")
+    player_map = totals[["player_id", "player"]].drop_duplicates()
     alltime_df = get_all_time(merged_df)
     (s_avg, at_avg, pos_avg) = get_league_averages(merged_df)
 
     players_json_path = os.path.join(output_dir, players_json)
+    players_mapping_json_path = os.path.join(output_dir, players_mapping_json)
     alltime_json_path = os.path.join(output_dir, alltime_json)
     seasonal_averages_json_path = os.path.join(output_dir, seasonal_averages_json)
     alltime_averages_json_path = os.path.join(output_dir, alltime_averages_json)
     position_averages_json_path = os.path.join(output_dir, position_averages_json)
 
     generate_json(merged_df, players_json_path)
+    generate_json(player_map, players_mapping_json_path)
     generate_json(alltime_df, alltime_json_path)
     generate_json(s_avg, seasonal_averages_json_path)
     generate_json(at_avg, alltime_averages_json_path, orient="index")
